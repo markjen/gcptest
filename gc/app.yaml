@@ -1,0 +1,12 @@
+application: xb-dev-markjen
+version: 1
+runtime: go
+api_version: go1
+
+instance_class: B1
+manual_scaling:
+  instances: 1
+
+handlers:
+- url: /.*
+  script: _go_app
