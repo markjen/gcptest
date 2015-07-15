@@ -1,0 +1,7 @@
+application: markjen-gcptest-scaling
+
+dispatch:
+  - url: "*/work*"
+    module: auto-worker
+  - url: "*/*"
+    module: default

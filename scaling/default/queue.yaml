@@ -1,0 +1,3 @@
+queue:
+- name: auto-worker-push
+  rate: 100/s
