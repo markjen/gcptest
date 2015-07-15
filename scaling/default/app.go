@@ -86,13 +86,19 @@ func load(w http.ResponseWriter, r *http.Request, c appengine.Context, output *c
 		delayStr = "10"
 	}
 
+	tasks := make([]*taskqueue.Task, count)
 	for i := 0; i < count; i++ {
-		t := taskqueue.NewPOSTTask(
+		tasks[i] = taskqueue.NewPOSTTask(
 			"/work",
 			url.Values{
 				"delay": []string{delayStr},
 			})
-		taskqueue.Add(c, t, "auto-worker-push")
+	}
+	_, err := taskqueue.AddMulti(c, tasks, "auto-worker-push")
+	if err != nil {
+		c.Errorf("Error loading tasks: %s", err)
+		output.WriteLine("Error loading tasks")
+		return http.StatusInternalServerError
 	}
 
 	output.WriteLine("Loaded %d tasks into queue with delay %s", count, delayStr)
