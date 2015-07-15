@@ -57,7 +57,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.Infof("Finished, writing data: %+v (ID: %d)", workerExec, key.IntID())
+	c.Infof("Finished, writing data: %+v (ID: %s)", workerExec, key.StringID())
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Done!"))

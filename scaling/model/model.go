@@ -22,7 +22,7 @@ func (we *WorkerExec) String() string {
 }
 
 func SaveWorkerExec(c appengine.Context, w *WorkerExec) (*datastore.Key, error) {
-	keyID := fmt.Sprintf("%s:%d", w.InstanceID, w.RequestNumber)
-	key := datastore.NewKey(c, WorkerExecKind, keyID, 0, nil)
+	stringID := fmt.Sprintf("%s:%010d", w.InstanceID[:10], w.RequestNumber)
+	key := datastore.NewKey(c, WorkerExecKind, stringID, 0, nil)
 	return datastore.Put(c, key, w)
 }

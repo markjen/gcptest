@@ -4,20 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"sync"
 
 	"appengine"
 	"appengine/datastore"
-
-	"strconv"
+	"appengine/taskqueue"
 
 	"github.com/markjen/gcptest/scaling/model"
-
-	"net/url"
-
-	"appengine/taskqueue"
 )
 
 func init() {
+	http.HandleFunc("/clear", handlerWrapper(clear))
 	http.HandleFunc("/load", handlerWrapper(load))
 	http.HandleFunc("/", handlerWrapper(index))
 }
@@ -82,25 +81,57 @@ func load(w http.ResponseWriter, r *http.Request, c appengine.Context, output *c
 		count = int(parsedCount)
 	}
 
-	//	moduleHostname, err := appengine.ModuleHostname(c, "auto-worker", "1", "")
-	//	if err != nil {
-	//		c.Errorf("Error getting worker module hostname: %s", err)
-	//		output.WriteLine("Could not find worker module")
-	//		return http.StatusInternalServerError
-	//	}
+	delayStr := r.URL.Query().Get("delay")
+	if delayStr == "" {
+		delayStr = "10"
+	}
 
 	for i := 0; i < count; i++ {
 		t := taskqueue.NewPOSTTask(
 			"/work",
 			url.Values{
-				"delay": []string{"10"},
+				"delay": []string{delayStr},
 			})
-		//		t.Header = http.Header{
-		//			"Host": []string{moduleHostname},
-		//		}
 		taskqueue.Add(c, t, "auto-worker-push")
 	}
 
-	output.WriteLine("Loaded %d tasks into queue", count)
+	output.WriteLine("Loaded %d tasks into queue with delay %s", count, delayStr)
 	return http.StatusOK
+}
+
+func clear(w http.ResponseWriter, r *http.Request, c appengine.Context, output *crBuffer) int {
+	q := datastore.NewQuery(model.WorkerExecKind).KeysOnly()
+	iter := q.Run(c)
+
+	count := 0
+	success := 0
+	var wg sync.WaitGroup
+	defer func() {
+		wg.Wait()
+		output.WriteLine("Successfully deleted %d of %d entities", success, count)
+	}()
+
+	for {
+		key, err := iter.Next(nil)
+		if err == datastore.Done {
+			return http.StatusOK
+		}
+		if err != nil {
+			c.Errorf("Error clearing WorkerExec entities: %s", err)
+			output.WriteLine("Error clearing WorkerExec entities")
+			return http.StatusInternalServerError
+		}
+
+		count++
+		wg.Add(1)
+		go func(k *datastore.Key) {
+			datastore.Delete(c, k)
+			if err != nil {
+				c.Errorf("Error deleteing key %s", k)
+			} else {
+				success++
+			}
+			wg.Done()
+		}(key)
+	}
 }
