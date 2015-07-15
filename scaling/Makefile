@@ -1,6 +1,9 @@
+tail:
+	tail -f .var/output
+
 clean:
-	rm -rf ../var/scaling
+	rm -rf .var
 
 serve:
-	mkdir -p ../var/scaling
-	dev_appserver.py --storage_path=../var/scaling default/dispatch.yaml default/app.yaml worker/app.yaml
+	mkdir -p .var
+	dev_appserver.py --storage_path=.var default/dispatch.yaml default/app.yaml worker/app.yaml 2>&1 | tee -ai .var/output
