@@ -24,3 +24,13 @@ driven by various triggers (HTTP requests and push task queues).
 * Automatic scaling does not strictly respect `max_concurrent_requests`
 * As worker module is hit with traffic over a period of time, automatic scaling
   increases the number of instances; but seemingly gradually?
+
+## sdk
+This package attempts to measure performance of the open source SDK in a GAE
+app vs. a Managed VMs.
+
+To get going, first get the open source SDK:
+
+`go get google.golang.org/appengine`
+
+### findings

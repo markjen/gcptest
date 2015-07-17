@@ -1,0 +1,12 @@
+runtime: go
+api_version: go1
+version: 1
+
+module: manual-worker
+instance_class: B1
+manual_scaling:
+  instances: 1
+
+handlers:
+- url: /.*
+  script: _go_app

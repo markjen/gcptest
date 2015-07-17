@@ -1,4 +1,4 @@
-package scaling
+package gc
 
 import (
 	"fmt"
